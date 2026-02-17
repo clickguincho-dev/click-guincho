@@ -1,0 +1,19 @@
+{
+  "name": "click-guincho",
+  "version": "2.0.0",
+  "description": "Marketplace bilateral de guincho – Brasil",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "node scripts/build.js",
+    "deploy": "vercel --prod",
+    "setup": "node scripts/setup-env.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "mercadopago": "^2.0.4"
+  },
+  "devDependencies": {
+    "vercel": "^33.0.0"
+  },
+  "engines": { "node": ">=18.0.0" }
+}

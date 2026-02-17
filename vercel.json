@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "functions": {
+    "api/**/*.js": { "runtime": "nodejs20.x" }
+  },
+  "routes": [
+    { "src": "/api/pagamentos/(.*)", "dest": "/api/pagamentos.js" },
+    { "src": "/api/solicitacoes",    "dest": "/api/solicitacoes.js" },
+    { "src": "/api/motoristas",      "dest": "/api/motoristas.js" },
+    { "src": "/api/mensagens",       "dest": "/api/mensagens.js" },
+    { "src": "/(.*\\.html)",         "dest": "/$1" },
+    { "src": "/(.*\\.js)",           "dest": "/$1" },
+    { "src": "/(.*\\.css)",          "dest": "/$1" },
+    { "src": "/(.*\\.json)",         "dest": "/$1" },
+    { "src": "/",                    "dest": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "geolocation=(self)" }
+      ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    }
+  ]
+}

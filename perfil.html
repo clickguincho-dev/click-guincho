@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ff8c00">
+  <meta name="sb-url"   content="__SUPABASE_URL__">
+  <meta name="sb-anon"  content="__SUPABASE_ANON_KEY__">
+  <title>Click Guincho - Perfil</title>
+  <link rel="manifest" href="/manifest.json">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <script>tailwind.config={theme:{extend:{colors:{"primary":"#ff8c00","background-dark":"#0a1128"}}}}</script>
+</head>
+<body class="font-sans bg-[#0a1128] text-white antialiased">
+<div class="flex h-screen w-full flex-col overflow-hidden max-w-[480px] mx-auto">
+  <header class="flex items-center justify-between px-6 py-4 bg-[#0d1730] border-b border-white/10">
+    <h1 class="text-xl font-bold">Meu Perfil</h1>
+    <button onclick="salvarPerfil()" class="text-primary text-sm font-bold hover:text-orange-400 transition-colors" id="btnSalvar" style="display:none">Salvar</button>
+  </header>
+
+  <main class="flex-1 overflow-y-auto">
+    <!-- Avatar -->
+    <div class="bg-gradient-to-b from-primary/10 to-transparent px-6 py-8 text-center">
+      <div class="relative inline-block">
+        <img id="avatarPerfil" src="https://ui-avatars.com/api/?name=U&background=ff8c00&color=fff&size=200"
+          alt="Avatar" class="w-24 h-24 rounded-2xl border-2 border-white/20 shadow-xl object-cover">
+        <button onclick="document.getElementById('inputFoto').click()" class="absolute -bottom-2 -right-2 bg-primary text-white p-2 rounded-xl shadow-lg hover:bg-orange-500 transition-colors">
+          <span class="material-symbols-outlined text-sm">edit</span>
+        </button>
+        <input id="inputFoto" type="file" accept="image/*" class="hidden" onchange="uploadFoto(event)">
+      </div>
+      <h2 id="nomePerfil" class="text-2xl font-black mt-4">Carregando...</h2>
+      <p id="tipoPerfil" class="text-sm text-primary font-bold mt-1 uppercase tracking-wider">---</p>
+    </div>
+
+    <div class="px-4 py-4 space-y-3">
+
+      <!-- Dados pessoais -->
+      <div class="bg-white/5 rounded-2xl p-5 border border-white/10">
+        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Dados Pessoais</h3>
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs text-slate-500 block mb-1">Nome completo</label>
+            <input id="inputNome" type="text" class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-all text-sm" oninput="marcarAlterado()">
+          </div>
+          <div>
+            <label class="text-xs text-slate-500 block mb-1">E-mail</label>
+            <input id="inputEmail" type="email" disabled class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-slate-400 text-sm cursor-not-allowed">
+          </div>
+          <div>
+            <label class="text-xs text-slate-500 block mb-1">Telefone</label>
+            <input id="inputTel" type="tel" placeholder="(11) 99999-9999" class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-all text-sm" oninput="marcarAlterado()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Menu de opções -->
+      <div class="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+        <a href="#" class="flex items-center gap-4 p-4 hover:bg-white/5 transition-colors border-b border-white/5">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400"><span class="material-symbols-outlined">credit_card</span></div>
+          <div class="flex-1"><p class="font-semibold text-sm">Formas de Pagamento</p><p class="text-xs text-slate-500">Cartões e PIX salvos</p></div>
+          <span class="material-symbols-outlined text-slate-600">chevron_right</span>
+        </a>
+        <a href="#" class="flex items-center gap-4 p-4 hover:bg-white/5 transition-colors border-b border-white/5">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10 text-green-400"><span class="material-symbols-outlined">directions_car</span></div>
+          <div class="flex-1"><p class="font-semibold text-sm">Meus Veículos</p><p class="text-xs text-slate-500">Gerenciar veículos</p></div>
+          <span class="material-symbols-outlined text-slate-600">chevron_right</span>
+        </a>
+        <a href="#" class="flex items-center gap-4 p-4 hover:bg-white/5 transition-colors border-b border-white/5">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-500/10 text-yellow-400"><span class="material-symbols-outlined">notifications</span></div>
+          <div class="flex-1"><p class="font-semibold text-sm">Notificações</p><p class="text-xs text-slate-500">Configurar alertas</p></div>
+          <span class="material-symbols-outlined text-slate-600">chevron_right</span>
+        </a>
+        <a href="#" class="flex items-center gap-4 p-4 hover:bg-white/5 transition-colors">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400"><span class="material-symbols-outlined">help</span></div>
+          <div class="flex-1"><p class="font-semibold text-sm">Ajuda e Suporte</p><p class="text-xs text-slate-500">Central de atendimento</p></div>
+          <span class="material-symbols-outlined text-slate-600">chevron_right</span>
+        </a>
+      </div>
+
+      <!-- Alterar senha -->
+      <button onclick="alterarSenha()" class="w-full flex items-center justify-center gap-2 p-4 bg-white/5 text-slate-300 rounded-2xl hover:bg-white/10 transition-colors border border-white/10 text-sm font-semibold">
+        <span class="material-symbols-outlined">lock_reset</span> Alterar Senha
+      </button>
+
+      <!-- Logout -->
+      <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 p-4 bg-red-500/10 text-red-400 rounded-2xl hover:bg-red-500/20 transition-colors border border-red-500/20 font-semibold text-sm">
+        <span class="material-symbols-outlined">logout</span> Sair da Conta
+      </button>
+
+      <p class="text-center text-xs text-slate-600 pb-4">Click Guincho v2.0 · Todos os direitos reservados</p>
+    </div>
+  </main>
+
+  <nav class="flex border-t border-white/5 bg-[#0a1128] px-4 pb-6 pt-2">
+    <a class="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-slate-300" href="index.html">
+      <span class="material-symbols-outlined">home</span><p class="text-[10px] font-medium uppercase">Início</p>
+    </a>
+    <a class="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-slate-300" href="servicos.html">
+      <span class="material-symbols-outlined">local_shipping</span><p class="text-[10px] font-medium uppercase">Serviços</p>
+    </a>
+    <a class="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-slate-300" href="historico.html">
+      <span class="material-symbols-outlined">history</span><p class="text-[10px] font-medium uppercase">Histórico</p>
+    </a>
+    <a class="flex flex-1 flex-col items-center gap-1 text-primary" href="perfil.html">
+      <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">account_circle</span><p class="text-[10px] font-medium uppercase">Perfil</p>
+    </a>
+  </nav>
+</div>
+
+<script src="js/app.js"></script>
+<script type="module">
+  import { supabase, getSession, getProfile } from './js/supabase-client.js';
+  import { Auth } from './js/auth.js';
+
+  let session, profile, alterado = false;
+
+  async function init() {
+    session = await Auth.checkSession('/login.html');
+    if (!session) return;
+    profile = await getProfile(session.user.id);
+    renderPerfil();
+  }
+
+  function renderPerfil() {
+    const TIPOS = { usuario: 'Usuário', motorista: 'Guincheiro', admin: 'Administrador' };
+    document.getElementById('nomePerfil').textContent = profile.nome;
+    document.getElementById('tipoPerfil').textContent = TIPOS[profile.tipo] || profile.tipo;
+    document.getElementById('avatarPerfil').src = profile.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.nome)}&background=ff8c00&color=fff&size=200`;
+    document.getElementById('inputNome').value = profile.nome;
+    document.getElementById('inputEmail').value = profile.email;
+    document.getElementById('inputTel').value = profile.telefone || '';
+  }
+
+  window.marcarAlterado = () => {
+    alterado = true;
+    document.getElementById('btnSalvar').style.display = 'block';
+  };
+
+  window.salvarPerfil = async () => {
+    const nome = document.getElementById('inputNome').value.trim();
+    const telefone = document.getElementById('inputTel').value.trim();
+    if (!nome) { ClickGuincho.mostrarNotificacao('Nome não pode ser vazio', 'error'); return; }
+    const { error } = await supabase.from('profiles').update({ nome, telefone }).eq('id', profile.id);
+    if (error) { ClickGuincho.mostrarNotificacao('Erro ao salvar: ' + error.message, 'error'); return; }
+    ClickGuincho.mostrarNotificacao('Perfil atualizado!', 'success');
+    document.getElementById('nomePerfil').textContent = nome;
+    document.getElementById('btnSalvar').style.display = 'none';
+    alterado = false;
+  };
+
+  window.uploadFoto = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { ClickGuincho.mostrarNotificacao('Foto muito grande (max 2MB)', 'error'); return; }
+    const ext = file.name.split('.').pop();
+    const path = `avatars/${profile.id}.${ext}`;
+    const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+    if (upErr) { ClickGuincho.mostrarNotificacao('Erro ao fazer upload', 'error'); return; }
+    const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+    await supabase.from('profiles').update({ foto_url: data.publicUrl }).eq('id', profile.id);
+    document.getElementById('avatarPerfil').src = data.publicUrl + '?t=' + Date.now();
+    ClickGuincho.mostrarNotificacao('Foto atualizada!', 'success');
+  };
+
+  window.alterarSenha = async () => {
+    const email = profile.email;
+    await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/nova-senha.html` });
+    ClickGuincho.mostrarNotificacao('E-mail de redefinição enviado!', 'success');
+  };
+
+  window.handleLogout = async () => {
+    if (!confirm('Deseja realmente sair?')) return;
+    await supabase.auth.signOut();
+    window.location.href = '/login.html';
+  };
+
+  init();
+</script>
+</body>
+</html>

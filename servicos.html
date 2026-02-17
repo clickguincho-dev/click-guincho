@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ff8c00">
+  <meta name="sb-url"   content="__SUPABASE_URL__">
+  <meta name="sb-anon"  content="__SUPABASE_ANON_KEY__">
+  <meta name="maps-key" content="__GOOGLE_MAPS_KEY__">
+  <title>Click Guincho - Selecionar Serviço</title>
+  <link rel="manifest" href="/manifest.json">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <script>tailwind.config={theme:{extend:{colors:{"primary":"#ff8c00","background-dark":"#0a1128"}}}}</script>
+</head>
+<body class="font-sans bg-slate-50 dark:bg-[#0a1128] text-slate-900 dark:text-white antialiased">
+<div class="relative flex h-screen w-full flex-col overflow-hidden max-w-[480px] mx-auto dark">
+
+  <!-- HEADER -->
+  <header class="flex items-center justify-between px-6 py-4 bg-white dark:bg-[#0a1128] border-b border-slate-200 dark:border-white/5">
+    <button onclick="window.history.back()" class="flex h-10 w-10 items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-white/10">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </button>
+    <div class="text-center">
+      <h1 class="text-lg font-bold">Escolha o Serviço</h1>
+      <p class="text-xs text-slate-500">Qual tipo de guincho você precisa?</p>
+    </div>
+    <div class="w-10"></div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="flex-1 overflow-y-auto px-5 py-5 space-y-4">
+
+    <!-- Destino (opcional) -->
+    <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+      <p class="text-xs font-bold uppercase tracking-wider text-primary mb-2">Destino (opcional)</p>
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">flag</span>
+        <input id="destinoInput" type="text" placeholder="Para onde vai o veículo?"
+          class="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-all text-sm">
+      </div>
+    </div>
+
+    <!-- Cards de serviço -->
+    <div id="servicosLista" class="space-y-3">
+      <!-- carregado dinamicamente -->
+      <div class="text-center py-8"><div class="spinner mx-auto"></div></div>
+    </div>
+
+    <div class="bg-blue-900/20 rounded-xl p-4 border border-blue-500/20">
+      <div class="flex items-start gap-3">
+        <span class="material-symbols-outlined text-blue-400 mt-0.5">info</span>
+        <p class="text-xs text-slate-400">O valor exato é calculado com base na distância até o destino. Você verá o preço final antes de confirmar.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- NAV -->
+  <nav class="flex border-t border-white/5 bg-[#0a1128] px-4 pb-6 pt-2">
+    <a class="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-slate-300" href="index.html">
+      <span class="material-symbols-outlined">home</span><p class="text-[10px] font-medium uppercase">Início</p>
+    </a>
+    <a class="flex flex-1 flex-col items-center gap-1 text-primary" href="servicos.html">
+      <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">local_shipping</span><p class="text-[10px] font-medium uppercase">Serviços</p>
+    </a>
+    <a class="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-slate-300" href="historico.html">
+      <span class="material-symbols-outlined">history</span><p class="text-[10px] font-medium uppercase">Histórico</p>
+    </a>
+    <a class="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-slate-300" href="perfil.html">
+      <span class="material-symbols-outlined">account_circle</span><p class="text-[10px] font-medium uppercase">Perfil</p>
+    </a>
+  </nav>
+</div>
+
+<!-- MODAL CONFIRMAÇÃO -->
+<div id="modalConfirm" class="hidden fixed inset-0 z-50 flex items-end">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="fecharModal()"></div>
+  <div class="relative w-full max-w-[480px] mx-auto bg-[#0d1730] rounded-t-3xl p-6 border-t border-white/10">
+    <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-5"></div>
+    <h3 class="font-black text-xl mb-4">Confirmar Solicitação</h3>
+    <div class="space-y-3 mb-6 text-sm">
+      <div class="flex justify-between"><span class="text-slate-400">Serviço</span><strong id="confServico">---</strong></div>
+      <div class="flex justify-between"><span class="text-slate-400">Origem</span><span id="confOrigem" class="text-right max-w-[200px] text-xs">---</span></div>
+      <div class="flex justify-between"><span class="text-slate-400">Destino</span><span id="confDestino" class="text-right max-w-[200px] text-xs">---</span></div>
+      <div class="flex justify-between"><span class="text-slate-400">Distância est.</span><span id="confDistancia">---</span></div>
+      <div class="h-px bg-white/10"></div>
+      <div class="flex justify-between text-lg"><span class="font-bold">Valor estimado</span><strong class="text-primary" id="confValor">---</strong></div>
+    </div>
+    <button id="btnConfirmar" onclick="confirmarSolicitacao()"
+      class="w-full py-4 bg-primary hover:bg-orange-500 text-white font-black rounded-2xl transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2 text-lg">
+      <span class="material-symbols-outlined">minor_crash</span> Solicitar Guincho!
+    </button>
+    <button onclick="fecharModal()" class="w-full mt-3 py-3 text-slate-400 text-sm hover:text-white transition-colors">Cancelar</button>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script type="module">
+  import { supabase, getSession, getProfile, getPrecos } from './js/supabase-client.js';
+  import { Auth } from './js/auth.js';
+  import { Maps } from './js/maps.js';
+
+  let session, profile, precos;
+  let servicoSelecionado = null;
+  let destino = null;
+  let locAtual = JSON.parse(localStorage.getItem('locAtual') || 'null');
+
+  const ICONES = { 'guincho-simples': 'local_shipping', 'guincho-plataforma': 'conveyor_belt', 'moto-guincho': 'two_wheeler', 'guincho-pesado': 'local_shipping' };
+  const CORES  = { 'guincho-simples': 'text-primary bg-primary/10', 'guincho-plataforma': 'text-blue-400 bg-blue-500/10', 'moto-guincho': 'text-green-400 bg-green-500/10', 'guincho-pesado': 'text-red-400 bg-red-500/10' };
+  const DESCS  = {
+    'guincho-simples':    ['Veículos leves e médios', 'Reboque padrão', 'Chegada rápida'],
+    'guincho-plataforma': ['Veículos de luxo e rebaixados', 'Sem contato com o solo', 'Máxima segurança'],
+    'moto-guincho':       ['Especializado em motos', 'Transporte seguro', 'Rápido e eficiente'],
+    'guincho-pesado':     ['Caminhões, vans, SUVs grandes', 'Equipamento especializado', 'Para veículos pesados']
+  };
+
+  async function init() {
+    session = await Auth.checkSession('/login.html');
+    if (!session) return;
+    profile = await getProfile(session.user.id);
+    precos = await getPrecos();
+    renderServiços();
+    await Maps.init('miniMapa', -23.55, -46.63, 13).catch(() => {});
+    Maps.initAutocomplete('destinoInput', d => { destino = d; });
+  }
+
+  function renderServiços() {
+    const container = document.getElementById('servicosLista');
+    container.innerHTML = Object.entries(precos).map(([tipo, cfg]) => `
+      <div class="service-card bg-white/5 dark:bg-slate-800/50 rounded-2xl p-5 border-2 border-white/10 cursor-pointer hover:border-primary transition-all"
+        data-service="${tipo}" onclick="selecionarServico('${tipo}')">
+        <div class="flex items-center gap-4">
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${CORES[tipo]}">
+            <span class="material-symbols-outlined text-3xl">${ICONES[tipo]}</span>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-bold">${cfg.nome_display}</h3>
+            <p class="text-sm text-slate-400">${DESCS[tipo][0]}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-slate-500">A partir de</p>
+            <p class="text-xl font-bold text-primary">R$ ${cfg.preco_minimo.toFixed(0)}</p>
+            <p class="text-xs text-slate-500">+R$ ${cfg.preco_por_km.toFixed(2)}/km</p>
+          </div>
+        </div>
+        <div class="mt-4 pt-4 border-t border-white/10 flex flex-wrap gap-3">
+          ${DESCS[tipo].map(d => `<span class="flex items-center gap-1 text-xs text-slate-400"><span class="material-symbols-outlined text-sm text-green-400" style="font-variation-settings:'FILL' 1">check_circle</span>${d}</span>`).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  window.selecionarServico = async (tipo) => {
+    servicoSelecionado = tipo;
+    const cfg = precos[tipo];
+    document.querySelectorAll('.service-card').forEach(c => c.classList.toggle('border-primary', c.dataset.service === tipo));
+
+    // Calcular preço com destino
+    let distKm = 5, durMin = '--';
+    if (destino && locAtual) {
+      try {
+        const rota = await Maps.calcularRota(locAtual.lat, locAtual.lng, destino.lat, destino.lng);
+        distKm = rota.distancia_km;
+        durMin = rota.duracao_texto;
+        destino._distancia_km = distKm;
+      } catch (e) { console.warn('Rota não calculada:', e.message); }
+    }
+    const preco = Maps.calcularPreco(distKm, tipo, precos);
+
+    document.getElementById('confServico').textContent   = cfg.nome_display;
+    document.getElementById('confOrigem').textContent    = locAtual?.address || 'Localização atual';
+    document.getElementById('confDestino').textContent   = destino?.address || 'Não informado';
+    document.getElementById('confDistancia').textContent = `~${distKm} km · ${durMin}`;
+    document.getElementById('confValor').textContent     = `R$ ${preco.toFixed(2)}`;
+    document.getElementById('modalConfirm').classList.remove('hidden');
+  };
+
+  window.fecharModal = () => { document.getElementById('modalConfirm').classList.add('hidden'); };
+
+  window.confirmarSolicitacao = async () => {
+    if (!locAtual) { ClickGuincho.mostrarNotificacao('Localização necessária', 'error'); return; }
+    const btn = document.getElementById('btnConfirmar');
+    btn.disabled = true; btn.innerHTML = '<div class="spinner-sm mx-auto"></div>';
+
+    const cfg = precos[servicoSelecionado];
+    const body = {
+      tipo_servico: servicoSelecionado,
+      origem_lat: locAtual.lat, origem_lng: locAtual.lng, origem_endereco: locAtual.address,
+      destino_lat:     destino?.lat  || null,
+      destino_lng:     destino?.lng  || null,
+      destino_endereco: destino?.address || null,
+      local_perigoso: localStorage.getItem('localPerigoso') === 'true'
+    };
+
+    const resp = await fetch('/api/solicitacoes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify(body)
+    });
+    const data = await resp.json();
+    if (!resp.ok) { ClickGuincho.mostrarNotificacao(data.error || 'Erro', 'error'); btn.disabled = false; return; }
+
+    localStorage.setItem('solicitacaoAtiva', JSON.stringify(data.solicitacao));
+    window.location.href = '/acompanhamento.html';
+  };
+
+  init();
+</script>
+</body>
+</html>

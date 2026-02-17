@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ff8c00">
+  <meta name="sb-url"   content="__SUPABASE_URL__">
+  <meta name="sb-anon"  content="__SUPABASE_ANON_KEY__">
+  <meta name="maps-key" content="__GOOGLE_MAPS_KEY__">
+  <title>Click Guincho - Acompanhando</title>
+  <link rel="manifest" href="/manifest.json">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <script>tailwind.config={theme:{extend:{colors:{"primary":"#ff8c00","background-dark":"#0a1128"}}}}</script>
+  <style>
+    #mapaAcompanhamento { height: 55vh; }
+    .chat-modal { transition: transform 0.3s ease; }
+    .status-badge-aguardando { background: #f59e0b20; color: #f59e0b; }
+    .status-badge-aceita, .status-badge-a_caminho { background: #3b82f620; color: #60a5fa; }
+    .status-badge-no_local { background: #8b5cf620; color: #a78bfa; }
+    .status-badge-em_andamento { background: #10b98120; color: #34d399; }
+    .status-badge-concluida { background: #10b98120; color: #34d399; }
+  </style>
+</head>
+<body class="font-sans bg-[#0a1128] text-white antialiased h-screen flex flex-col overflow-hidden max-w-[480px] mx-auto">
+
+  <!-- HEADER -->
+  <header class="flex items-center justify-between px-4 py-3 bg-[#0a1128] border-b border-white/5 z-50 shrink-0">
+    <button onclick="confirmarCancelamento()" class="p-2 hover:bg-white/10 rounded-full transition-colors">
+      <span class="material-symbols-outlined text-2xl">arrow_back</span>
+    </button>
+    <div class="flex flex-col items-center">
+      <h1 class="text-sm font-bold uppercase tracking-tight">Acompanhando Guincho</h1>
+      <span id="statusLabel" class="text-[10px] text-primary font-bold animate-pulse uppercase tracking-widest">Ao Vivo</span>
+    </div>
+    <button onclick="chamarEmergencia()" class="p-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500/30 transition-colors">
+      <span class="material-symbols-outlined text-xl">shield_with_heart</span>
+    </button>
+  </header>
+
+  <!-- MAPA -->
+  <div id="mapaAcompanhamento" class="w-full shrink-0 bg-slate-900 relative">
+    <div class="absolute inset-0 flex items-center justify-center">
+      <div class="text-center">
+        <div class="spinner mx-auto mb-2"></div>
+        <p class="text-slate-500 text-sm">Carregando mapa...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD INFERIOR -->
+  <div class="flex-1 overflow-y-auto bg-[#0d1730] rounded-t-3xl -mt-4 relative z-10 shadow-[0_-15px_30px_rgba(0,0,0,0.4)]">
+    <div class="w-full flex justify-center pt-3 pb-1">
+      <div class="w-12 h-1.5 bg-white/20 rounded-full"></div>
+    </div>
+
+    <div class="px-5 pb-6">
+      <!-- Status e tempo -->
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <span id="statusBadge" class="status-badge-aguardando text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider inline-block mb-2">
+            Procurando guincho...
+          </span>
+          <h2 id="tempoChegada" class="text-3xl font-extrabold">Aguardando motorista</h2>
+          <p id="distanciaInfo" class="text-sm text-slate-400 mt-1">Buscando guincheiro próximo...</p>
+        </div>
+        <div class="h-16 w-16 bg-primary/5 rounded-2xl flex items-center justify-center border border-primary/20">
+          <span class="material-symbols-outlined text-primary text-4xl" id="statusIcon">search</span>
+        </div>
+      </div>
+
+      <!-- Preço estimado -->
+      <div class="bg-white/5 rounded-xl px-4 py-3 mb-4 flex items-center justify-between">
+        <span class="text-sm text-slate-400">Valor estimado</span>
+        <span id="valorEstimado" class="text-xl font-black text-primary">R$ --</span>
+      </div>
+
+      <!-- Card motorista (oculto até ser aceito) -->
+      <div id="cardMotorista" class="hidden bg-white/5 rounded-2xl p-4 mb-4 border border-white/10">
+        <div class="flex items-center gap-4">
+          <div class="relative">
+            <img id="fotoMotorista" src="https://ui-avatars.com/api/?name=M&background=ff8c00&color=fff" 
+              alt="Motorista" class="w-16 h-16 rounded-xl object-cover border-2 border-white/20">
+            <div class="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-0.5 border-2 border-[#0d1730]">
+              <span class="material-symbols-outlined text-xs text-white">verified</span>
+            </div>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <p id="nomeMotorista" class="font-bold text-lg">---</p>
+            </div>
+            <p id="veiculoMotorista" class="text-sm text-slate-400 uppercase tracking-wide">---</p>
+            <div class="mt-1 inline-block bg-white/10 px-2 py-0.5 rounded text-xs font-bold border border-white/20">
+              <span id="placaVeiculo">---</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="flex items-center text-yellow-400 justify-end">
+              <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1">star</span>
+              <span id="avaliacaoMotorista" class="text-sm font-bold ml-1">---</span>
+            </div>
+            <p class="text-[10px] text-slate-400 font-bold"><span id="totalAvaliacoes">---</span> corridas</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ações -->
+      <div id="acoesMotorista" class="hidden grid grid-cols-2 gap-3 mb-4">
+        <button onclick="ligarMotorista()" class="flex items-center justify-center gap-2 py-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-all border border-white/10">
+          <span class="material-symbols-outlined">call</span> Ligar
+        </button>
+        <button onclick="abrirChat()" class="flex items-center justify-center gap-2 py-4 bg-primary hover:bg-orange-500 text-white font-bold rounded-xl shadow-lg shadow-primary/30 transition-all">
+          <span class="material-symbols-outlined">chat_bubble</span> Chat
+        </button>
+      </div>
+
+      <!-- Cancelar -->
+      <button onclick="confirmarCancelamento()" id="btnCancelar"
+        class="w-full py-3 text-red-400 text-sm font-semibold hover:bg-red-500/10 rounded-xl transition-colors">
+        Cancelar solicitação
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL CHAT -->
+  <div id="chatModal" class="hidden fixed inset-0 z-50 flex items-end">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="fecharChat()"></div>
+    <div class="relative w-full max-w-[480px] mx-auto bg-[#0d1730] rounded-t-3xl h-[70vh] flex flex-col border-t border-white/10">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-white/10">
+        <h3 class="font-bold">Chat com Guincheiro</h3>
+        <button onclick="fecharChat()" class="text-slate-400 hover:text-white">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div id="chatMsgs" class="flex-1 overflow-y-auto px-4 py-4 space-y-3"></div>
+      <div class="px-4 py-3 border-t border-white/10 flex gap-3">
+        <input id="chatInput" type="text" placeholder="Digite uma mensagem..."
+          class="flex-1 bg-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+        <button onclick="enviarMensagem()" class="bg-primary text-white rounded-xl px-4 flex items-center justify-center hover:bg-orange-500 transition-colors">
+          <span class="material-symbols-outlined">send</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL AVALIAÇÃO -->
+  <div id="avaliacaoModal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+    <div class="relative bg-[#0d1730] rounded-3xl p-6 w-full max-w-sm border border-white/10">
+      <h3 class="text-xl font-black text-center mb-2">Serviço concluído! 🎉</h3>
+      <p class="text-slate-400 text-sm text-center mb-6">Como foi a experiência com o guincheiro?</p>
+      <div class="flex justify-center gap-2 mb-6" id="estrelas">
+        <span class="material-symbols-outlined text-4xl cursor-pointer text-slate-600 hover:text-yellow-400 transition-colors star" data-val="1">star</span>
+        <span class="material-symbols-outlined text-4xl cursor-pointer text-slate-600 hover:text-yellow-400 transition-colors star" data-val="2">star</span>
+        <span class="material-symbols-outlined text-4xl cursor-pointer text-slate-600 hover:text-yellow-400 transition-colors star" data-val="3">star</span>
+        <span class="material-symbols-outlined text-4xl cursor-pointer text-slate-600 hover:text-yellow-400 transition-colors star" data-val="4">star</span>
+        <span class="material-symbols-outlined text-4xl cursor-pointer text-slate-600 hover:text-yellow-400 transition-colors star" data-val="5">star</span>
+      </div>
+      <textarea id="comentarioAvaliacao" placeholder="Comentário opcional..." rows="3"
+        class="w-full bg-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary text-sm mb-4 resize-none"></textarea>
+      <button onclick="enviarAvaliacao()" class="w-full bg-primary text-white font-bold py-4 rounded-xl hover:bg-orange-500 transition-all">
+        Enviar Avaliação
+      </button>
+      <button onclick="window.location.href='index.html'" class="w-full mt-2 text-slate-400 text-sm py-2">Pular</button>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script type="module">
+    import { supabase, getSession, getProfile } from './js/supabase-client.js';
+    import { Auth } from './js/auth.js';
+    import { Maps } from './js/maps.js';
+    import { Realtime } from './js/realtime.js';
+
+    let session, profile, solicitacao, motoristaProfile, telefoneMot = '';
+    let notaAvaliacao = 0, stopTracking;
+    const STATUS_LABELS = {
+      aguardando: ['Procurando guincho...','search','#f59e0b'],
+      aceita:     ['Guincheiro aceitou!','thumb_up','#60a5fa'],
+      a_caminho:  ['A caminho','local_shipping','#60a5fa'],
+      no_local:   ['Guincheiro chegou!','location_on','#a78bfa'],
+      em_andamento:['Serviço em andamento','build','#34d399'],
+      concluida:  ['Concluído! ✓','check_circle','#34d399'],
+    };
+
+    async function init() {
+      session = await Auth.checkSession('/login.html');
+      if (!session) return;
+      profile = await getProfile(session.user.id);
+
+      // Buscar solicitação ativa
+      const { data: sol } = await supabase.from('solicitacoes')
+        .select('*, motorista:motorista_id(*,profiles(nome,foto_url,telefone))')
+        .eq('usuario_id', session.user.id)
+        .in('status', ['aguardando','aceita','a_caminho','no_local','em_andamento'])
+        .order('solicitado_em', { ascending: false }).limit(1).single();
+
+      if (!sol) {
+        ClickGuincho.mostrarNotificacao('Nenhuma solicitação ativa', 'warning');
+        setTimeout(() => window.location.href = 'index.html', 2000);
+        return;
+      }
+      solicitacao = sol;
+
+      // Valor estimado
+      document.getElementById('valorEstimado').textContent =
+        solicitacao.preco_estimado ? `R$ ${solicitacao.preco_estimado.toFixed(2)}` : 'A calcular';
+
+      // Inicializar mapa
+      const locAtual = JSON.parse(localStorage.getItem('locAtual') || 'null');
+      await Maps.init('mapaAcompanhamento',
+        locAtual?.lat || solicitacao.origem_lat,
+        locAtual?.lng || solicitacao.origem_lng, 14);
+      Maps.setUserMarker(solicitacao.origem_lat, solicitacao.origem_lng);
+
+      // Rota se tiver destino
+      if (solicitacao.destino_lat) {
+        Maps.calcularRota(solicitacao.origem_lat, solicitacao.origem_lng, solicitacao.destino_lat, solicitacao.destino_lng).catch(() => {});
+      }
+
+      // Atualizar UI com status atual
+      atualizarUI(solicitacao);
+
+      // Monitorar atualizações em tempo real
+      Realtime.onSolicitacaoUpdate(solicitacao.id, dados => {
+        solicitacao = { ...solicitacao, ...dados };
+        atualizarUI(dados);
+        if (dados.status === 'concluida') mostrarAvaliacao();
+        if (dados.status === 'cancelada_motorista') {
+          ClickGuincho.mostrarNotificacao('Guincheiro cancelou. Procurando outro...', 'warning');
+        }
+      });
+
+      // Monitorar localização do motorista
+      Realtime.onRastreamento(solicitacao.id, ({ latitude, longitude }) => {
+        Maps.updateDriverMarker(latitude, longitude, motoristaProfile?.nome || 'Guincheiro');
+      });
+
+      // Monitorar mensagens do chat
+      Realtime.onMensagem(solicitacao.id, msg => adicionarMensagem(msg));
+
+      // Se motorista já foi atribuído
+      if (solicitacao.motorista_id) carregarDadosMotorista(solicitacao);
+    }
+
+    function atualizarUI(dados) {
+      const s = dados.status || 'aguardando';
+      const [texto, icone, cor] = STATUS_LABELS[s] || ['Status desconhecido', 'help', '#888'];
+      document.getElementById('statusBadge').textContent = texto;
+      document.getElementById('statusIcon').textContent = icone;
+
+      if (s === 'a_caminho') document.getElementById('tempoChegada').textContent = 'Guincheiro a caminho';
+      if (s === 'no_local') document.getElementById('tempoChegada').textContent = 'Guincheiro no local!';
+      if (s === 'em_andamento') document.getElementById('tempoChegada').textContent = 'Serviço em andamento';
+      if (s === 'concluida') {
+        document.getElementById('tempoChegada').textContent = 'Serviço concluído!';
+        document.getElementById('btnCancelar').style.display = 'none';
+      }
+
+      if (dados.motorista_id && !motoristaProfile) carregarDadosMotorista(dados);
+    }
+
+    async function carregarDadosMotorista(dados) {
+      const { data: mot } = await supabase.from('motoristas')
+        .select('*, profiles(nome, foto_url, telefone)')
+        .eq('id', dados.motorista_id).single();
+      if (!mot) return;
+      motoristaProfile = mot;
+      telefoneMot = mot.profiles?.telefone || '';
+
+      document.getElementById('nomeMotorista').textContent = mot.profiles?.nome || 'Motorista';
+      document.getElementById('veiculoMotorista').textContent = `${mot.veiculo_marca || ''} ${mot.veiculo_modelo || ''}`;
+      document.getElementById('placaVeiculo').textContent = mot.veiculo_placa;
+      document.getElementById('avaliacaoMotorista').textContent = mot.avaliacao_media?.toFixed(1) || '0.0';
+      document.getElementById('totalAvaliacoes').textContent = mot.total_corridas || 0;
+      document.getElementById('fotoMotorista').src = mot.profiles?.foto_url ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(mot.profiles?.nome || 'M')}&background=ff8c00&color=fff`;
+
+      document.getElementById('cardMotorista').classList.remove('hidden');
+      document.getElementById('acoesMotorista').classList.remove('hidden');
+      document.getElementById('distanciaInfo').textContent = `Guincheiro: ${mot.profiles?.nome}`;
+    }
+
+    window.ligarMotorista = () => {
+      if (telefoneMot) window.location.href = `tel:${telefoneMot}`;
+      else ClickGuincho.mostrarNotificacao('Telefone não disponível', 'warning');
+    };
+
+    window.abrirChat = () => document.getElementById('chatModal').classList.remove('hidden');
+    window.fecharChat = () => document.getElementById('chatModal').classList.add('hidden');
+
+    window.enviarMensagem = async () => {
+      const input = document.getElementById('chatInput');
+      const txt = input.value.trim();
+      if (!txt) return;
+      input.value = '';
+      await fetch('/api/mensagens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ solicitacao_id: solicitacao.id, conteudo: txt })
+      });
+    };
+
+    function adicionarMensagem(msg) {
+      const isMeu = msg.remetente_id === session.user.id;
+      const div = document.createElement('div');
+      div.className = `flex ${isMeu ? 'justify-end' : 'justify-start'}`;
+      div.innerHTML = `<div class="max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${isMeu ? 'bg-primary text-white rounded-br-sm' : 'bg-white/10 text-white rounded-bl-sm'}">
+        ${msg.conteudo}
+        <div class="text-[10px] opacity-60 mt-1">${new Date(msg.criado_em).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})}</div>
+      </div>`;
+      const container = document.getElementById('chatMsgs');
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    window.confirmarCancelamento = async () => {
+      if (!confirm('Cancelar esta solicitação?')) return;
+      await fetch('/api/solicitacoes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ id: solicitacao.id, status: 'cancelada_usuario', motivo_cancelamento: 'Cancelado pelo usuário' })
+      });
+      window.location.href = 'index.html';
+    };
+
+    window.chamarEmergencia = () => {
+      if (confirm('Ligar para 190 (Polícia) em situação de emergência?')) window.location.href = 'tel:190';
+    };
+
+    function mostrarAvaliacao() {
+      document.getElementById('avaliacaoModal').classList.remove('hidden');
+      document.querySelectorAll('.star').forEach(s => {
+        s.addEventListener('click', () => {
+          notaAvaliacao = +s.dataset.val;
+          document.querySelectorAll('.star').forEach((st, i) => {
+            st.style.color = i < notaAvaliacao ? '#facc15' : '#475569';
+            st.style.fontVariationSettings = i < notaAvaliacao ? "'FILL' 1" : "'FILL' 0";
+          });
+        });
+      });
+    }
+
+    window.enviarAvaliacao = async () => {
+      if (notaAvaliacao === 0) { ClickGuincho.mostrarNotificacao('Selecione uma nota', 'warning'); return; }
+      const comentario = document.getElementById('comentarioAvaliacao').value;
+      await fetch('/api/solicitacoes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ id: solicitacao.id, avaliacao_usuario: notaAvaliacao, comentario_usuario: comentario })
+      });
+      window.location.href = 'index.html';
+    };
+
+    init();
+  </script>
+</body>
+</html>

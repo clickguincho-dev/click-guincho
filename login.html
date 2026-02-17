@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Click Guincho - Entrar</title>
+  <meta name="theme-color" content="#ff8c00">
+  <meta name="sb-url"   content="__SUPABASE_URL__">
+  <meta name="sb-anon"  content="__SUPABASE_ANON_KEY__">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <script>tailwind.config={theme:{extend:{colors:{"primary":"#ff8c00","background-dark":"#0a1128"}}}}</script>
+</head>
+<body class="font-sans bg-background-dark text-white min-h-screen flex items-center justify-center px-4">
+  <div class="w-full max-w-sm">
+
+    <!-- Logo -->
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-primary/10 border border-primary/20 mb-4">
+        <span class="material-symbols-outlined text-5xl text-primary">minor_crash</span>
+      </div>
+      <h1 class="text-3xl font-black">Click<span class="text-primary">Guincho</span></h1>
+      <p class="text-slate-400 text-sm mt-1">Socorro rápido em um toque</p>
+    </div>
+
+    <!-- Abas -->
+    <div class="flex bg-white/5 rounded-2xl p-1 mb-6">
+      <button id="tabLoginBtn" onclick="switchTab('login')" class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all bg-primary text-white">Entrar</button>
+      <button id="tabCadBtn"   onclick="switchTab('cadastro')" class="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all text-slate-400">Criar Conta</button>
+    </div>
+
+    <!-- ── FORM LOGIN ── -->
+    <div id="formLogin">
+      <div class="space-y-4">
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">email</span>
+          <input id="loginEmail" type="email" placeholder="Seu e-mail" autocomplete="email"
+            class="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-primary focus:bg-white/10 transition-all">
+        </div>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
+          <input id="loginSenha" type="password" placeholder="Sua senha" autocomplete="current-password"
+            class="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-all">
+        </div>
+        <button id="btnLogin" onclick="handleLogin()"
+          class="w-full bg-primary hover:bg-orange-500 text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/30">
+          <span class="material-symbols-outlined">login</span> Entrar
+        </button>
+        <button onclick="handleGoogle()"
+          class="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium py-4 rounded-xl transition-all flex items-center justify-center gap-3">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Continuar com Google
+        </button>
+        <button onclick="handleReset()" class="w-full text-slate-400 text-sm hover:text-primary transition-colors py-2">
+          Esqueci minha senha
+        </button>
+      </div>
+    </div>
+
+    <!-- ── FORM CADASTRO ── -->
+    <div id="formCadastro" class="hidden">
+      <!-- Tipo de conta -->
+      <div class="grid grid-cols-2 gap-3 mb-5">
+        <button id="tipoUsuarioBtn" onclick="setTipo('usuario')"
+          class="tipo-btn py-3 rounded-xl border-2 border-primary bg-primary/10 text-primary font-bold flex items-center justify-center gap-2 text-sm transition-all">
+          <span class="material-symbols-outlined text-xl">person</span> Usuário
+        </button>
+        <button id="tipoMotoristaBtn" onclick="setTipo('motorista')"
+          class="tipo-btn py-3 rounded-xl border-2 border-white/10 text-slate-400 font-bold flex items-center justify-center gap-2 text-sm transition-all hover:border-primary">
+          <span class="material-symbols-outlined text-xl">local_shipping</span> Guincheiro
+        </button>
+      </div>
+      <div class="space-y-3">
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person</span>
+          <input id="cadNome" type="text" placeholder="Nome completo"
+            class="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-all">
+        </div>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">email</span>
+          <input id="cadEmail" type="email" placeholder="E-mail"
+            class="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-all">
+        </div>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">phone</span>
+          <input id="cadTel" type="tel" placeholder="(11) 99999-9999"
+            class="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-all">
+        </div>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
+          <input id="cadSenha" type="password" placeholder="Senha (mín. 6 caracteres)"
+            class="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder-slate-500 focus:outline-none focus:border-primary transition-all">
+        </div>
+        <button id="btnCadastro" onclick="handleCadastro()"
+          class="w-full bg-primary hover:bg-orange-500 text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/30">
+          <span class="material-symbols-outlined">person_add</span> Criar Conta
+        </button>
+      </div>
+    </div>
+
+    <!-- Erro -->
+    <div id="erroMsg" class="hidden mt-4 bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl px-4 py-3 text-center"></div>
+
+    <p class="text-center text-xs text-slate-600 mt-8">
+      Ao continuar, você concorda com nossos <a href="#" class="text-primary hover:underline">Termos de Uso</a>
+    </p>
+  </div>
+
+  <script type="module">
+    import { supabase } from './js/supabase-client.js';
+    import { Auth } from './js/auth.js';
+
+    // Verificar se já logado
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) goHome(session.user);
+    });
+
+    let tipoSelecionado = 'usuario';
+
+    window.switchTab = (tab) => {
+      const isLogin = tab === 'login';
+      document.getElementById('formLogin').classList.toggle('hidden', !isLogin);
+      document.getElementById('formCadastro').classList.toggle('hidden', isLogin);
+      document.getElementById('tabLoginBtn').className = `flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${isLogin ? 'bg-primary text-white' : 'text-slate-400'}`;
+      document.getElementById('tabCadBtn').className   = `flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${!isLogin ? 'bg-primary text-white' : 'text-slate-400'}`;
+      clearError();
+    };
+
+    window.setTipo = (tipo) => {
+      tipoSelecionado = tipo;
+      const u = document.getElementById('tipoUsuarioBtn'), m = document.getElementById('tipoMotoristaBtn');
+      if (tipo === 'usuario') {
+        u.className = u.className.replace('border-white/10 text-slate-400', 'border-primary bg-primary/10 text-primary');
+        m.className = m.className.replace('border-primary bg-primary/10 text-primary', 'border-white/10 text-slate-400');
+      } else {
+        m.className = m.className.replace('border-white/10 text-slate-400', 'border-primary bg-primary/10 text-primary');
+        u.className = u.className.replace('border-primary bg-primary/10 text-primary', 'border-white/10 text-slate-400');
+      }
+    };
+
+    window.handleLogin = async () => {
+      const email = document.getElementById('loginEmail').value.trim();
+      const senha = document.getElementById('loginSenha').value;
+      if (!email || !senha) return showError('Preencha e-mail e senha');
+      setLoading('btnLogin', true);
+      try {
+        const { user } = await Auth.login(email, senha);
+        goHome(user);
+      } catch (e) { showError(e.message); }
+      finally { setLoading('btnLogin', false); }
+    };
+
+    window.handleGoogle = async () => {
+      try { await Auth.loginGoogle(); } catch (e) { showError(e.message); }
+    };
+
+    window.handleCadastro = async () => {
+      const nome = document.getElementById('cadNome').value.trim();
+      const email = document.getElementById('cadEmail').value.trim();
+      const telefone = document.getElementById('cadTel').value.trim();
+      const senha = document.getElementById('cadSenha').value;
+      if (!nome || !email || !senha) return showError('Preencha todos os campos obrigatórios');
+      if (senha.length < 6) return showError('A senha deve ter ao menos 6 caracteres');
+      setLoading('btnCadastro', true);
+      try {
+        await Auth.cadastrar({ nome, email, senha, telefone, tipo: tipoSelecionado });
+        showError('✅ Conta criada! Verifique seu e-mail para confirmar.', 'success');
+        setTimeout(() => switchTab('login'), 3000);
+      } catch (e) { showError(e.message); }
+      finally { setLoading('btnCadastro', false); }
+    };
+
+    window.handleReset = async () => {
+      const email = document.getElementById('loginEmail').value.trim() || prompt('Digite seu e-mail:');
+      if (!email) return;
+      try {
+        await Auth.resetarSenha(email);
+        showError('✅ E-mail de redefinição enviado!', 'success');
+      } catch (e) { showError(e.message); }
+    };
+
+    async function goHome(user) {
+      // Verificar tipo do usuário
+      const { data: profile } = await supabase.from('profiles').select('tipo').eq('id', user.id).single();
+      window.location.href = profile?.tipo === 'motorista' ? '/motorista.html' : '/index.html';
+    }
+
+    function showError(msg, tipo = 'error') {
+      const el = document.getElementById('erroMsg');
+      el.textContent = msg;
+      el.className = `mt-4 border text-sm rounded-xl px-4 py-3 text-center ${tipo === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`;
+      el.classList.remove('hidden');
+    }
+    function clearError() { document.getElementById('erroMsg').classList.add('hidden'); }
+    function setLoading(id, on) {
+      const btn = document.getElementById(id);
+      btn.disabled = on;
+      btn.style.opacity = on ? '0.7' : '1';
+    }
+
+    // Enter para login
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        if (!document.getElementById('formLogin').classList.contains('hidden')) handleLogin();
+        else handleCadastro();
+      }
+    });
+  </script>
+</body>
+</html>

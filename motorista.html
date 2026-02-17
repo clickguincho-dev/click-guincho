@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ff8c00">
+  <meta name="sb-url"   content="__SUPABASE_URL__">
+  <meta name="sb-anon"  content="__SUPABASE_ANON_KEY__">
+  <meta name="maps-key" content="__GOOGLE_MAPS_KEY__">
+  <title>Click Guincho - Motorista</title>
+  <link rel="manifest" href="/manifest.json">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <script>tailwind.config={theme:{extend:{colors:{"primary":"#ff8c00","background-dark":"#0a1128"}}}}</script>
+</head>
+<body class="font-sans bg-[#0a1128] text-white antialiased h-screen flex flex-col overflow-hidden max-w-[480px] mx-auto">
+
+  <!-- HEADER MOTORISTA -->
+  <header class="px-4 py-3 bg-[#0d1730] border-b border-white/10 shrink-0">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img id="drvFoto" src="https://ui-avatars.com/api/?name=M&background=ff8c00&color=fff" class="w-10 h-10 rounded-xl object-cover border-2 border-white/20">
+        <div>
+          <p class="font-bold text-sm" id="drvNome">Carregando...</p>
+          <div class="flex items-center gap-1">
+            <span class="material-symbols-outlined text-yellow-400 text-xs" style="font-variation-settings:'FILL' 1">star</span>
+            <span class="text-xs text-slate-400" id="drvRating">0.0</span>
+            <span class="text-xs text-slate-600 ml-1" id="drvCorridas">(0 corridas)</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
+        <label class="relative inline-flex cursor-pointer items-center">
+          <input type="checkbox" id="toggleOnline" class="peer sr-only">
+          <div class="peer h-7 w-14 rounded-full bg-slate-700 after:absolute after:start-[4px] after:top-[4px] after:h-5 after:w-6 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-green-500 peer-checked:after:translate-x-full"></div>
+        </label>
+        <span id="lblStatus" class="text-xs font-bold text-slate-400">Offline</span>
+      </div>
+    </div>
+
+    <!-- Ganhos do dia -->
+    <div class="flex gap-3 mt-3">
+      <div class="flex-1 bg-white/5 rounded-xl p-2.5 text-center border border-white/5">
+        <p class="text-[10px] text-slate-500 uppercase font-bold">Hoje</p>
+        <p class="text-lg font-black text-primary" id="ganhosHoje">R$ 0</p>
+      </div>
+      <div class="flex-1 bg-white/5 rounded-xl p-2.5 text-center border border-white/5">
+        <p class="text-[10px] text-slate-500 uppercase font-bold">Corridas</p>
+        <p class="text-lg font-black" id="corridasHoje">0</p>
+      </div>
+      <div class="flex-1 bg-white/5 rounded-xl p-2.5 text-center border border-white/5">
+        <p class="text-[10px] text-slate-500 uppercase font-bold">Avaliação</p>
+        <p class="text-lg font-black text-yellow-400" id="drvAvg">0.0</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAPA -->
+  <div id="drvMapa" class="w-full shrink-0 bg-slate-900" style="height:35vh"></div>
+
+  <!-- CONTEÚDO DINÂMICO -->
+  <div class="flex-1 overflow-y-auto bg-[#0d1730]">
+
+    <!-- Estado: offline -->
+    <div id="stateOffline" class="flex flex-col items-center justify-center h-full py-12 text-center px-6">
+      <span class="material-symbols-outlined text-6xl text-slate-700 mb-4">wifi_off</span>
+      <p class="text-slate-500 font-semibold">Você está offline</p>
+      <p class="text-slate-600 text-sm mt-1">Ative o toggle para receber solicitações</p>
+    </div>
+
+    <!-- Estado: aguardando corridas -->
+    <div id="stateOnline" class="hidden flex flex-col items-center justify-center h-full py-12 text-center px-6">
+      <div class="w-16 h-16 rounded-full bg-green-500/10 border-2 border-green-500/30 flex items-center justify-center mb-4">
+        <span class="material-symbols-outlined text-4xl text-green-400">sensors</span>
+      </div>
+      <p class="text-green-400 font-bold">Online — Aguardando solicitações</p>
+      <p class="text-slate-500 text-sm mt-1">Você será notificado quando houver uma corrida próxima</p>
+    </div>
+
+    <!-- Alerta: nova solicitação -->
+    <div id="stateNovaSol" class="hidden px-4 py-4">
+      <div class="bg-primary/10 border-2 border-primary rounded-2xl p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="material-symbols-outlined text-primary animate-bounce">notification_important</span>
+          <h3 class="font-black text-primary text-lg">NOVA CORRIDA!</h3>
+          <span id="timerAceirar" class="ml-auto bg-primary text-white text-sm font-black px-3 py-1 rounded-full">30s</span>
+        </div>
+        <div class="space-y-2 mb-4 text-sm">
+          <div class="flex items-start gap-2"><span class="material-symbols-outlined text-slate-400 text-base mt-0.5">location_on</span><span id="solOrigem" class="text-slate-300">---</span></div>
+          <div class="flex items-start gap-2"><span class="material-symbols-outlined text-slate-400 text-base mt-0.5">flag</span><span id="solDestino" class="text-slate-300">---</span></div>
+          <div class="flex items-center gap-4 pt-2">
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-primary text-base">payments</span><strong id="solValor" class="text-primary">---</strong></span>
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-slate-400 text-base">straighten</span><span id="solDistancia" class="text-slate-300">---</span></span>
+          </div>
+          <div id="solPerigoso" class="hidden flex items-center gap-1 text-red-400 font-bold">
+            <span class="material-symbols-outlined text-base">warning</span> LOCAL PERIGOSO — PRIORIDADE MÁXIMA
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="recusarCorrida()" class="py-3 rounded-xl border border-white/20 text-slate-300 font-bold hover:bg-white/10 transition-colors flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">close</span> Recusar
+          </button>
+          <button onclick="aceitarCorrida()" class="py-3 rounded-xl bg-primary text-white font-bold hover:bg-orange-500 transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">check</span> Aceitar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado: corrida ativa -->
+    <div id="stateCorridaAtiva" class="hidden px-4 py-4 space-y-3">
+      <div class="bg-white/5 rounded-xl p-4 border border-white/10">
+        <div class="flex items-center justify-between mb-3">
+          <span id="corridaStatusBadge" class="bg-blue-500/20 text-blue-400 text-xs font-bold px-3 py-1 rounded-full">A CAMINHO</span>
+          <span class="text-primary font-black" id="corridaValor">R$ ---</span>
+        </div>
+        <!-- Cliente -->
+        <div class="flex items-center gap-3">
+          <img id="clienteFoto" src="https://ui-avatars.com/api/?name=U&background=334&color=fff" class="w-10 h-10 rounded-xl">
+          <div class="flex-1">
+            <p class="font-bold" id="clienteNome">Usuário</p>
+            <p class="text-xs text-slate-400" id="clienteEndOrigemCard">---</p>
+          </div>
+          <a id="btnLigar" href="#" class="bg-white/10 text-white rounded-xl px-3 py-2 flex items-center gap-1 text-sm hover:bg-white/20 transition-colors">
+            <span class="material-symbols-outlined text-base">call</span>
+          </a>
+        </div>
+      </div>
+      <!-- Ações de status -->
+      <button id="btnCheguei" onclick="atualizarStatus('no_local')" class="w-full py-4 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined">location_on</span> Cheguei ao Local
+      </button>
+      <button id="btnIniciar" onclick="atualizarStatus('em_andamento')" class="hidden w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined">play_arrow</span> Iniciar Serviço
+      </button>
+      <button id="btnConcluir" onclick="atualizarStatus('concluida')" class="hidden w-full py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-500/20">
+        <span class="material-symbols-outlined">check_circle</span> Concluir Serviço
+      </button>
+      <button onclick="cancelarCorridaMotorista()" class="w-full py-3 text-red-400 text-sm font-semibold hover:bg-red-500/10 rounded-xl transition-colors">
+        Cancelar Corrida
+      </button>
+    </div>
+
+    <!-- Histórico rápido -->
+    <div class="px-4 py-4 border-t border-white/5">
+      <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Últimas corridas</h3>
+      <div id="drvHistorico" class="space-y-2"></div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script type="module">
+    import { supabase, getSession, getProfile } from './js/supabase-client.js';
+    import { Auth } from './js/auth.js';
+    import { Maps } from './js/maps.js';
+    import { Realtime } from './js/realtime.js';
+
+    let session, profile, motorista, solicitacaoAtiva, stopTracking;
+    let timerDecline, timerSegundos = 30;
+
+    async function init() {
+      session = await Auth.checkSession('/login.html');
+      if (!session) return;
+      profile = await getProfile(session.user.id);
+      if (profile.tipo !== 'motorista') { window.location.href = '/index.html'; return; }
+
+      const { data: mot } = await supabase.from('motoristas').select('*').eq('id', profile.id).single();
+      if (!mot) { alert('Perfil de motorista não encontrado. Contate o suporte.'); return; }
+      motorista = mot;
+
+      document.getElementById('drvNome').textContent = profile.nome;
+      document.getElementById('drvRating').textContent = mot.avaliacao_media?.toFixed(1) || '0.0';
+      document.getElementById('drvCorridas').textContent = `(${mot.total_corridas || 0} corridas)`;
+      document.getElementById('drvAvg').textContent = mot.avaliacao_media?.toFixed(1) || '0.0';
+      document.getElementById('drvFoto').src = profile.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.nome)}&background=ff8c00&color=fff`;
+
+      // Inicializar mapa
+      await Maps.init('drvMapa', -23.5505, -46.6333, 14);
+      const loc = await Maps.getLocation().catch(() => null);
+      if (loc) Maps.setUserMarker(loc.lat, loc.lng);
+
+      // Verificar se há corrida ativa
+      const { data: solAtiva } = await supabase.from('solicitacoes')
+        .select('*').eq('motorista_id', profile.id)
+        .in('status', ['aceita','a_caminho','no_local','em_andamento'])
+        .order('solicitado_em', { ascending: false }).limit(1).single();
+
+      if (solAtiva) {
+        solicitacaoAtiva = solAtiva;
+        mostrarCorridaAtiva(solAtiva);
+      }
+
+      carregarGanhosDia();
+      carregarHistorico();
+
+      // Toggle online/offline
+      document.getElementById('toggleOnline').checked = mot.status === 'online';
+      atualizarEstadoOnline(mot.status === 'online');
+      document.getElementById('toggleOnline').addEventListener('change', e => toggleOnline(e.target.checked));
+    }
+
+    async function toggleOnline(isOn) {
+      const status = isOn ? 'online' : 'offline';
+      document.getElementById('lblStatus').textContent = isOn ? 'Online' : 'Offline';
+      document.getElementById('statusDot').className = `w-2.5 h-2.5 rounded-full ${isOn ? 'bg-green-400' : 'bg-slate-600'}`;
+
+      let body = { status };
+      if (isOn) {
+        const loc = await Maps.getLocation().catch(() => null);
+        if (loc) { body.latitude = loc.lat; body.longitude = loc.lng; }
+      }
+
+      await fetch('/api/motoristas', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify(body)
+      });
+
+      atualizarEstadoOnline(isOn);
+
+      if (isOn) {
+        Realtime.onNovaSolicitacao(motorista.veiculo_tipo, sol => mostrarNovaSolicitacao(sol));
+      }
+    }
+
+    function atualizarEstadoOnline(isOn) {
+      document.getElementById('stateOffline').classList.toggle('hidden', isOn);
+      document.getElementById('stateOnline').classList.toggle('hidden', !isOn || !!solicitacaoAtiva);
+    }
+
+    function mostrarNovaSolicitacao(sol) {
+      if (solicitacaoAtiva) return; // já tem corrida
+      solicitacaoAtiva = sol;
+      document.getElementById('solOrigem').textContent = sol.origem_endereco;
+      document.getElementById('solDestino').textContent = sol.destino_endereco || 'Destino não informado';
+      document.getElementById('solValor').textContent = `R$ ${(sol.preco_estimado || 0).toFixed(2)}`;
+      document.getElementById('solDistancia').textContent = `${sol.distancia_km || '?'} km`;
+      document.getElementById('solPerigoso').classList.toggle('hidden', !sol.local_perigoso);
+
+      document.getElementById('stateOnline').classList.add('hidden');
+      document.getElementById('stateNovaSol').classList.remove('hidden');
+      navigator.vibrate?.([500, 100, 500, 100, 500]);
+
+      timerSegundos = 30;
+      timerDecline = setInterval(() => {
+        timerSegundos--;
+        document.getElementById('timerAceirar').textContent = `${timerSegundos}s`;
+        if (timerSegundos <= 0) { clearInterval(timerDecline); recusarCorrida(); }
+      }, 1000);
+    }
+
+    window.aceitarCorrida = async () => {
+      clearInterval(timerDecline);
+      document.getElementById('stateNovaSol').classList.add('hidden');
+      await fetch('/api/solicitacoes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ id: solicitacaoAtiva.id, status: 'aceita' })
+      });
+      await fetch('/api/motoristas', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ status: 'em_corrida' })
+      });
+      mostrarCorridaAtiva(solicitacaoAtiva);
+      stopTracking = Realtime.startDriverTracking(solicitacaoAtiva.id, profile.id);
+    };
+
+    window.recusarCorrida = () => {
+      clearInterval(timerDecline);
+      document.getElementById('stateNovaSol').classList.add('hidden');
+      document.getElementById('stateOnline').classList.remove('hidden');
+      solicitacaoAtiva = null;
+    };
+
+    async function mostrarCorridaAtiva(sol) {
+      document.getElementById('stateCorridaAtiva').classList.remove('hidden');
+      document.getElementById('corridaValor').textContent = `R$ ${(sol.preco_estimado || 0).toFixed(2)}`;
+
+      // Carregar dados do cliente
+      const { data: cliente } = await supabase.from('profiles').select('nome,foto_url,telefone').eq('id', sol.usuario_id).single();
+      if (cliente) {
+        document.getElementById('clienteNome').textContent = cliente.nome;
+        document.getElementById('clienteEndOrigemCard').textContent = sol.origem_endereco;
+        document.getElementById('clienteFoto').src = cliente.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(cliente.nome)}&background=334&color=fff`;
+        if (cliente.telefone) document.getElementById('btnLigar').href = `tel:${cliente.telefone}`;
+      }
+    }
+
+    window.atualizarStatus = async (status) => {
+      await fetch('/api/solicitacoes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ id: solicitacaoAtiva.id, status })
+      });
+      if (status === 'no_local') {
+        document.getElementById('btnCheguei').classList.add('hidden');
+        document.getElementById('btnIniciar').classList.remove('hidden');
+        document.getElementById('corridaStatusBadge').textContent = 'NO LOCAL';
+      } else if (status === 'em_andamento') {
+        document.getElementById('btnIniciar').classList.add('hidden');
+        document.getElementById('btnConcluir').classList.remove('hidden');
+        document.getElementById('corridaStatusBadge').textContent = 'EM ANDAMENTO';
+      } else if (status === 'concluida') {
+        stopTracking?.();
+        document.getElementById('stateCorridaAtiva').classList.add('hidden');
+        document.getElementById('stateOnline').classList.remove('hidden');
+        await fetch('/api/motoristas', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ status: 'online' }) });
+        ClickGuincho.mostrarNotificacao('Corrida concluída! 🎉', 'success');
+        carregarGanhosDia();
+        carregarHistorico();
+        solicitacaoAtiva = null;
+      }
+    };
+
+    window.cancelarCorridaMotorista = async () => {
+      if (!confirm('Cancelar esta corrida?')) return;
+      stopTracking?.();
+      await fetch('/api/solicitacoes', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ id: solicitacaoAtiva.id, status: 'cancelada_motorista', motivo_cancelamento: 'Cancelado pelo guincheiro' }) });
+      await fetch('/api/motoristas', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ status: 'online' }) });
+      document.getElementById('stateCorridaAtiva').classList.add('hidden');
+      document.getElementById('stateOnline').classList.remove('hidden');
+      solicitacaoAtiva = null;
+    };
+
+    async function carregarGanhosDia() {
+      const hoje = new Date().toISOString().split('T')[0];
+      const { data } = await supabase.from('solicitacoes').select('preco_final')
+        .eq('motorista_id', profile.id).eq('status', 'concluida').gte('concluido_em', `${hoje}T00:00:00`);
+      const total = data?.reduce((s, r) => s + (r.preco_final || 0), 0) || 0;
+      document.getElementById('ganhosHoje').textContent = `R$ ${total.toFixed(0)}`;
+      document.getElementById('corridasHoje').textContent = data?.length || 0;
+    }
+
+    async function carregarHistorico() {
+      const { data } = await supabase.from('solicitacoes').select('*, profiles:usuario_id(nome)')
+        .eq('motorista_id', profile.id).in('status', ['concluida','cancelada_motorista'])
+        .order('solicitado_em', { ascending: false }).limit(5);
+      const el = document.getElementById('drvHistorico');
+      if (!data?.length) { el.innerHTML = '<p class="text-slate-600 text-sm text-center">Nenhuma corrida ainda</p>'; return; }
+      el.innerHTML = data.map(s => `
+        <div class="flex items-center gap-3 bg-white/5 rounded-xl p-3 border border-white/5">
+          <span class="material-symbols-outlined text-xl ${s.status === 'concluida' ? 'text-green-400' : 'text-red-400'}">${s.status === 'concluida' ? 'check_circle' : 'cancel'}</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-bold truncate">${s.profiles?.nome || 'Usuário'}</p>
+            <p class="text-xs text-slate-500 truncate">${s.origem_endereco}</p>
+          </div>
+          <strong class="text-primary shrink-0">R$ ${(s.preco_final || 0).toFixed(0)}</strong>
+        </div>
+      `).join('');
+    }
+
+    init();
+  </script>
+</body>
+</html>

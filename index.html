@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Click Guincho - Socorro rápido em um toque">
+  <meta name="theme-color" content="#ff8c00">
+  <meta name="sb-url"   content="__SUPABASE_URL__">
+  <meta name="sb-anon"  content="__SUPABASE_ANON_KEY__">
+  <meta name="maps-key" content="__GOOGLE_MAPS_KEY__">
+  <title>Click Guincho - Emergência</title>
+  <link rel="manifest" href="/manifest.json">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <script>tailwind.config={theme:{extend:{colors:{"primary":"#ff8c00","background-dark":"#0a1128"}}}}</script>
+</head>
+<body class="font-sans bg-[#0a1128] text-white antialiased">
+<div class="relative flex h-screen w-full flex-col overflow-hidden max-w-[480px] mx-auto">
+
+  <!-- HEADER -->
+  <header class="flex items-center justify-between px-6 py-4">
+    <div class="flex items-center gap-3">
+      <div class="size-10 overflow-hidden rounded-full border-2 border-primary/30">
+        <img id="userAvatar" alt="Avatar" class="h-full w-full object-cover"
+          src="https://ui-avatars.com/api/?name=U&background=ff8c00&color=fff&size=100">
+      </div>
+      <div class="flex flex-col">
+        <span class="text-xs text-slate-400">Bem-vindo,</span>
+        <span class="text-sm font-bold" id="userName">Carregando...</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="btnNotif" class="relative flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors">
+        <span class="material-symbols-outlined">notifications</span>
+        <span id="notifBadge" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs flex items-center justify-center font-bold">0</span>
+      </button>
+      <button onclick="Auth.logout()" class="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors" title="Sair">
+        <span class="material-symbols-outlined text-xl">logout</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="flex flex-1 flex-col items-center justify-center px-6 text-center">
+    <div class="mb-8 space-y-2">
+      <h1 class="text-3xl font-extrabold tracking-tight">Socorro rápido<br>em um toque</h1>
+      <p class="text-slate-400 text-sm font-medium">Acione o guincho mais próximo agora</p>
+    </div>
+
+    <!-- Botão de emergência -->
+    <div class="relative group">
+      <div class="absolute inset-0 animate-ping rounded-full bg-primary/20 duration-1000"></div>
+      <button id="btnSolicitarGuincho"
+        class="relative flex h-64 w-64 flex-col items-center justify-center rounded-full bg-primary p-4 shadow-[0_0_50px_rgba(255,140,0,0.4)] transition-transform active:scale-95 hover:shadow-[0_0_70px_rgba(255,140,0,0.6)]">
+        <span class="material-symbols-outlined text-6xl text-[#0a1128] mb-2 font-bold">minor_crash</span>
+        <span class="text-xl font-black leading-tight text-[#0a1128] px-6">SOLICITAR<br>GUINCHO AGORA</span>
+      </button>
+    </div>
+
+    <!-- Card localização -->
+    <div class="mt-10 w-full max-w-md overflow-hidden rounded-xl bg-white/5 border border-white/10 p-4 backdrop-blur-md">
+      <div class="flex items-center gap-4">
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <span class="material-symbols-outlined">location_on</span>
+        </div>
+        <div class="flex flex-col text-left flex-1">
+          <p class="text-xs font-bold uppercase tracking-wider text-primary">Você está em:</p>
+          <p class="text-sm font-medium text-slate-200 truncate" id="localizacaoAtual">Obtendo localização...</p>
+        </div>
+        <button id="btnRefLoc" class="text-slate-400 hover:text-primary transition-colors">
+          <span class="material-symbols-outlined text-xl">refresh</span>
+        </button>
+      </div>
+      <!-- Mapa mini -->
+      <div id="miniMapa" class="mt-4 h-28 w-full overflow-hidden rounded-lg bg-slate-800 flex items-center justify-center">
+        <span class="text-slate-600 text-xs">Carregando mapa...</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Toggle Local Perigoso -->
+  <section class="bg-[#0a1128]/80 px-6 pb-10 pt-4 backdrop-blur-sm">
+    <div class="mx-auto max-w-md rounded-2xl border-2 border-red-500/50 bg-red-500/10 p-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-full bg-red-500 text-white">
+            <span class="material-symbols-outlined">warning</span>
+          </div>
+          <div>
+            <p class="text-sm font-bold leading-none">Local Perigoso?</p>
+            <p class="text-xs text-red-200">Ative para prioridade máxima</p>
+          </div>
+        </div>
+        <label class="relative inline-flex cursor-pointer items-center">
+          <input type="checkbox" class="peer sr-only" id="toggleLocalPerigoso">
+          <div class="peer h-7 w-14 rounded-full bg-slate-700 after:absolute after:start-[4px] after:top-[4px] after:h-5 after:w-6 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-red-600 peer-checked:after:translate-x-full"></div>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- NAV -->
+  <nav class="flex border-t border-white/5 bg-[#0a1128] px-4 pb-6 pt-2">
+    <a class="flex flex-1 flex-col items-center gap-1 text-primary" href="index.html">
+      <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">home</span>
+      <p class="text-[10px] font-medium uppercase">Início</p>
+    </a>
+    <a class="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-slate-300" href="servicos.html">
+      <span class="material-symbols-outlined">local_shipping</span>
+      <p class="text-[10px] font-medium uppercase">Serviços</p>
+    </a>
+    <a class="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-slate-300" href="historico.html">
+      <span class="material-symbols-outlined">history</span>
+      <p class="text-[10px] font-medium uppercase">Histórico</p>
+    </a>
+    <a class="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-slate-300" href="perfil.html">
+      <span class="material-symbols-outlined">account_circle</span>
+      <p class="text-[10px] font-medium uppercase">Perfil</p>
+    </a>
+  </nav>
+</div>
+
+<script src="js/app.js"></script>
+<script type="module">
+  import { supabase, getSession, getProfile } from './js/supabase-client.js';
+  import { Auth } from './js/auth.js';
+  import { Maps } from './js/maps.js';
+  import { Realtime } from './js/realtime.js';
+
+  window.Auth = Auth;
+
+  let userProfile = null;
+  let locAtual = null;
+
+  async function init() {
+    const session = await Auth.checkSession('/login.html');
+    if (!session) return;
+
+    userProfile = await getProfile(session.user.id);
+
+    // Redirecionar motorista para o app deles
+    if (userProfile.tipo === 'motorista') { window.location.href = '/motorista.html'; return; }
+    if (userProfile.tipo === 'admin') { window.location.href = '/admin.html'; return; }
+
+    // Atualizar UI
+    document.getElementById('userName').textContent = userProfile.nome.split(' ')[0];
+    document.getElementById('userAvatar').src = userProfile.foto_url ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile.nome)}&background=ff8c00&color=fff`;
+
+    // Verificar se há corrida ativa
+    const { data: solAtiva } = await supabase.from('solicitacoes')
+      .select('id,status').eq('usuario_id', session.user.id)
+      .in('status', ['aguardando','aceita','a_caminho','no_local','em_andamento'])
+      .order('solicitado_em', { ascending: false }).limit(1).single();
+
+    if (solAtiva) {
+      const continuar = confirm('Você tem uma solicitação ativa. Deseja acompanhá-la?');
+      if (continuar) { window.location.href = '/acompanhamento.html'; return; }
+    }
+
+    // Obter localização
+    await atualizarLocalizacao();
+
+    // Carregar notificações
+    carregarNotificacoes(session.user.id);
+    Realtime.onNotificacao(session.user.id, mostrarNotificacao);
+
+    // Eventos
+    document.getElementById('btnSolicitarGuincho').addEventListener('click', solicitarGuincho);
+    document.getElementById('btnRefLoc').addEventListener('click', atualizarLocalizacao);
+    document.getElementById('toggleLocalPerigoso').addEventListener('change', e => {
+      localStorage.setItem('localPerigoso', e.target.checked);
+      if (e.target.checked) mostrarNotificacao({ titulo: 'Modo PRIORIDADE MÁXIMA ativado', tipo: 'warning' });
+    });
+    document.getElementById('toggleLocalPerigoso').checked = localStorage.getItem('localPerigoso') === 'true';
+  }
+
+  async function atualizarLocalizacao() {
+    const el = document.getElementById('localizacaoAtual');
+    el.textContent = 'Obtendo localização...';
+    try {
+      locAtual = await Maps.getLocation();
+      el.textContent = locAtual.address;
+      localStorage.setItem('locAtual', JSON.stringify(locAtual));
+      // Mini mapa
+      await Maps.init('miniMapa', locAtual.lat, locAtual.lng, 14);
+      Maps.setUserMarker(locAtual.lat, locAtual.lng);
+    } catch (e) {
+      el.textContent = 'Não foi possível obter localização';
+      ClickGuincho.mostrarNotificacao('Ative a localização para usar o app', 'warning');
+    }
+  }
+
+  function solicitarGuincho() {
+    if (!locAtual) {
+      ClickGuincho.mostrarNotificacao('Aguarde a localização ser detectada', 'warning');
+      return;
+    }
+    localStorage.setItem('locAtual', JSON.stringify(locAtual));
+    window.location.href = 'servicos.html';
+  }
+
+  async function carregarNotificacoes(userId) {
+    const { data } = await supabase.from('notificacoes')
+      .select('id').eq('usuario_id', userId).eq('lida', false);
+    const count = data?.length || 0;
+    const badge = document.getElementById('notifBadge');
+    if (count > 0) { badge.textContent = count > 9 ? '9+' : count; badge.classList.remove('hidden'); }
+  }
+
+  function mostrarNotificacao(n) {
+    ClickGuincho.mostrarNotificacao(`${n.titulo}: ${n.corpo || ''}`, 'info');
+  }
+
+  init();
+</script>
+</body>
+</html>

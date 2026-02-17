@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ff8c00">
+  <meta name="sb-url"   content="__SUPABASE_URL__">
+  <meta name="sb-anon"  content="__SUPABASE_ANON_KEY__">
+  <title>Click Guincho - Histórico</title>
+  <link rel="manifest" href="/manifest.json">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/global.css">
+  <script>tailwind.config={theme:{extend:{colors:{"primary":"#ff8c00","background-dark":"#0a1128"}}}}</script>
+</head>
+<body class="font-sans bg-[#0a1128] text-white antialiased">
+<div class="flex h-screen w-full flex-col overflow-hidden max-w-[480px] mx-auto">
+  <header class="flex items-center justify-between px-6 py-4 bg-[#0d1730] border-b border-white/10">
+    <h1 class="text-xl font-bold">Histórico</h1>
+    <div class="flex gap-2">
+      <select id="filtroStatus" onchange="carregarHistorico()" class="bg-white/10 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none focus:border-primary">
+        <option value="">Todos</option>
+        <option value="concluida">Concluídos</option>
+        <option value="cancelada_usuario">Cancelados</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Estatísticas rápidas -->
+  <div class="flex gap-3 px-4 py-3 bg-[#0d1730] border-b border-white/5">
+    <div class="flex-1 text-center"><p class="text-[10px] text-slate-500 uppercase font-bold">Total gasto</p><p class="text-lg font-black text-primary" id="totalGasto">--</p></div>
+    <div class="flex-1 text-center"><p class="text-[10px] text-slate-500 uppercase font-bold">Corridas</p><p class="text-lg font-black" id="totalCorridas">--</p></div>
+    <div class="flex-1 text-center"><p class="text-[10px] text-slate-500 uppercase font-bold">Avaliação</p><p class="text-lg font-black text-yellow-400" id="mediaAval">--</p></div>
+  </div>
+
+  <main class="flex-1 overflow-y-auto px-4 py-4">
+    <div id="lista" class="space-y-3"></div>
+    <div id="vazio" class="hidden text-center py-20">
+      <span class="material-symbols-outlined text-6xl text-slate-700 block mb-3">history</span>
+      <p class="text-slate-500">Nenhum histórico ainda</p>
+      <a href="index.html" class="inline-block mt-4 bg-primary text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-orange-500 transition-colors">Solicitar Guincho</a>
+    </div>
+    <div id="loading" class="text-center py-8"><div class="spinner mx-auto"></div></div>
+  </main>
+
+  <nav class="flex border-t border-white/5 bg-[#0a1128] px-4 pb-6 pt-2">
+    <a class="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-slate-300" href="index.html">
+      <span class="material-symbols-outlined">home</span><p class="text-[10px] font-medium uppercase">Início</p>
+    </a>
+    <a class="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-slate-300" href="servicos.html">
+      <span class="material-symbols-outlined">local_shipping</span><p class="text-[10px] font-medium uppercase">Serviços</p>
+    </a>
+    <a class="flex flex-1 flex-col items-center gap-1 text-primary" href="historico.html">
+      <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">history</span><p class="text-[10px] font-medium uppercase">Histórico</p>
+    </a>
+    <a class="flex flex-1 flex-col items-center gap-1 text-slate-500 hover:text-slate-300" href="perfil.html">
+      <span class="material-symbols-outlined">account_circle</span><p class="text-[10px] font-medium uppercase">Perfil</p>
+    </a>
+  </nav>
+</div>
+
+<!-- Modal detalhe -->
+<div id="modalDetalhe" class="hidden fixed inset-0 z-50 flex items-end">
+  <div class="absolute inset-0 bg-black/60" onclick="fecharDetalhe()"></div>
+  <div class="relative w-full max-w-[480px] mx-auto bg-[#0d1730] rounded-t-3xl p-6 border-t border-white/10">
+    <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-5"></div>
+    <h3 class="font-black text-xl mb-4">Detalhes da Corrida</h3>
+    <div id="detalheConteudo" class="space-y-3 text-sm"></div>
+    <button onclick="fecharDetalhe()" class="w-full mt-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors font-bold">Fechar</button>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script type="module">
+  import { supabase, getSession, getProfile } from './js/supabase-client.js';
+  import { Auth } from './js/auth.js';
+
+  let session, profile;
+  const STATUS = { concluida: ['Concluído','text-green-400'], aguardando: ['Aguardando','text-yellow-400'], aceita:['Aceito','text-blue-400'], a_caminho:['A Caminho','text-blue-400'], no_local:['No Local','text-purple-400'], em_andamento:['Em Andamento','text-green-400'], cancelada_usuario:['Cancelado','text-red-400'], cancelada_motorista:['Cancelado Guincheiro','text-red-400'], cancelada_admin:['Cancelado Admin','text-red-400'] };
+  const TIPOS = { 'guincho-simples':'Guincho Simples','guincho-plataforma':'Guincho Plataforma','moto-guincho':'Moto Guincho','guincho-pesado':'Guincho Pesado' };
+
+  async function init() {
+    session = await Auth.checkSession('/login.html');
+    if (!session) return;
+    profile = await getProfile(session.user.id);
+    await carregarHistorico();
+  }
+
+  window.carregarHistorico = async () => {
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('lista').innerHTML = '';
+    document.getElementById('vazio').classList.add('hidden');
+
+    const status = document.getElementById('filtroStatus').value;
+    let q = supabase.from('solicitacoes')
+      .select('*, motorista:motorista_id(veiculo_placa, veiculo_modelo, profiles(nome))')
+      .eq('usuario_id', profile.id)
+      .order('solicitado_em', { ascending: false }).limit(50);
+    if (status) q = q.eq('status', status);
+    const { data } = await q;
+
+    document.getElementById('loading').classList.add('hidden');
+    if (!data?.length) { document.getElementById('vazio').classList.remove('hidden'); return; }
+
+    // Estatísticas
+    const concluidas = data.filter(d => d.status === 'concluida');
+    const totalGasto = concluidas.reduce((s, d) => s + (d.preco_final || 0), 0);
+    const avaliacoes = data.filter(d => d.avaliacao_usuario);
+    const mediaAval  = avaliacoes.length ? (avaliacoes.reduce((s,d) => s+d.avaliacao_usuario, 0)/avaliacoes.length).toFixed(1) : '--';
+    document.getElementById('totalGasto').textContent   = `R$ ${totalGasto.toFixed(0)}`;
+    document.getElementById('totalCorridas').textContent = concluidas.length;
+    document.getElementById('mediaAval').textContent    = mediaAval === '--' ? '--' : `${mediaAval}★`;
+
+    document.getElementById('lista').innerHTML = data.map(item => {
+      const [stLabel, stClass] = STATUS[item.status] || ['Desconhecido', 'text-slate-400'];
+      const dt = new Date(item.solicitado_em).toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+      const icone = item.status === 'concluida' ? 'check_circle' : item.status.includes('cancelada') ? 'cancel' : 'pending';
+      const iconeClass = item.status === 'concluida' ? 'text-green-400' : item.status.includes('cancelada') ? 'text-red-400' : 'text-yellow-400';
+      const stars = item.avaliacao_usuario ? '★'.repeat(item.avaliacao_usuario) + '☆'.repeat(5-item.avaliacao_usuario) : '';
+      return `
+        <div onclick="verDetalhe('${item.id}')" class="bg-white/5 rounded-2xl p-4 border border-white/5 cursor-pointer hover:border-primary/30 transition-all">
+          <div class="flex items-start gap-3">
+            <span class="material-symbols-outlined text-xl ${iconeClass} mt-0.5" style="${item.status==='concluida'?'font-variation-settings:\"FILL\" 1':''}">${icone}</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <p class="font-bold text-sm">${TIPOS[item.tipo_servico] || item.tipo_servico}</p>
+                <span class="text-lg font-black text-primary">R$ ${(item.preco_final || item.preco_estimado || 0).toFixed(0)}</span>
+              </div>
+              <p class="text-xs text-slate-500 truncate mt-0.5">${item.origem_endereco}</p>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-xs ${stClass} font-bold">${stLabel}</span>
+                <span class="text-xs text-slate-600">${dt}</span>
+              </div>
+              ${stars ? `<div class="text-yellow-400 text-xs mt-1">${stars}</div>` : ''}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  };
+
+  window.verDetalhe = async (id) => {
+    const { data: sol } = await supabase.from('solicitacoes')
+      .select('*, motorista:motorista_id(veiculo_placa, veiculo_modelo, veiculo_marca, avaliacao_media, profiles(nome, telefone))')
+      .eq('id', id).single();
+    if (!sol) return;
+
+    const [stLabel] = STATUS[sol.status] || ['?'];
+    const fmt = (d) => d ? new Date(d).toLocaleString('pt-BR') : '--';
+    document.getElementById('detalheConteudo').innerHTML = `
+      <div class="flex justify-between"><span class="text-slate-400">Tipo</span><strong>${TIPOS[sol.tipo_servico]}</strong></div>
+      <div class="flex justify-between"><span class="text-slate-400">Status</span><strong>${stLabel}</strong></div>
+      <div class="flex justify-between"><span class="text-slate-400">Solicitado</span><span class="text-xs text-right">${fmt(sol.solicitado_em)}</span></div>
+      <div class="flex justify-between"><span class="text-slate-400">Concluído</span><span class="text-xs">${fmt(sol.concluido_em)}</span></div>
+      <div class="h-px bg-white/10 my-1"></div>
+      <div class="flex justify-between"><span class="text-slate-400">Origem</span><span class="text-xs text-right max-w-[200px]">${sol.origem_endereco}</span></div>
+      <div class="flex justify-between"><span class="text-slate-400">Destino</span><span class="text-xs text-right max-w-[200px]">${sol.destino_endereco || 'Não informado'}</span></div>
+      <div class="flex justify-between"><span class="text-slate-400">Distância</span><span>${sol.distancia_km ? sol.distancia_km + ' km' : '--'}</span></div>
+      <div class="h-px bg-white/10 my-1"></div>
+      ${sol.motorista ? `<div class="flex justify-between"><span class="text-slate-400">Guincheiro</span><strong>${sol.motorista.profiles?.nome || '--'}</strong></div>
+      <div class="flex justify-between"><span class="text-slate-400">Veículo</span><span>${sol.motorista.veiculo_marca || ''} ${sol.motorista.veiculo_modelo || ''} — ${sol.motorista.veiculo_placa}</span></div>` : ''}
+      <div class="h-px bg-white/10 my-1"></div>
+      <div class="flex justify-between text-lg"><span class="font-bold">Total</span><strong class="text-primary">R$ ${(sol.preco_final || sol.preco_estimado || 0).toFixed(2)}</strong></div>
+      <div class="flex justify-between"><span class="text-slate-400">Pagamento</span><span>${sol.pagamento_status}</span></div>
+    `;
+    document.getElementById('modalDetalhe').classList.remove('hidden');
+  };
+  window.fecharDetalhe = () => document.getElementById('modalDetalhe').classList.add('hidden');
+
+  init();
+</script>
+</body>
+</html>
