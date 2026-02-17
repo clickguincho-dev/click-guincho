@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click Guincho - Histórico</title>
+    
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ff8c00",
+                        "background-light": "#f8f7f5",
+                        "background-dark": "#0a1128",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-white antialiased">
+    <div class="relative flex h-screen w-full flex-col overflow-hidden">
+        
+        <header class="flex items-center justify-between px-6 py-4 bg-white dark:bg-background-dark border-b border-slate-200 dark:border-slate-800">
+            <h1 class="text-xl font-bold">Histórico</h1>
+            <button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+                <span class="material-symbols-outlined">filter_list</span>
+            </button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto px-6 py-4">
+            <div id="historicoLista" class="space-y-4">
+                <!-- Histórico será carregado aqui -->
+            </div>
+            
+            <div id="historicoVazio" class="hidden text-center py-20">
+                <span class="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-700 mb-4">history</span>
+                <p class="text-slate-500 dark:text-slate-400">Nenhum histórico ainda</p>
+            </div>
+        </main>
+
+        <nav class="flex border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark px-4 pb-6 pt-2">
+            <a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-500" href="index.html">
+                <span class="material-symbols-outlined">home</span>
+                <p class="text-[10px] font-medium uppercase">Início</p>
+            </a>
+            <a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-500" href="servicos.html">
+                <span class="material-symbols-outlined">local_shipping</span>
+                <p class="text-[10px] font-medium uppercase">Serviços</p>
+            </a>
+            <a class="flex flex-1 flex-col items-center justify-center gap-1 text-primary" href="historico.html">
+                <span class="material-symbols-outlined fill-1">history</span>
+                <p class="text-[10px] font-medium uppercase">Histórico</p>
+            </a>
+            <a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-500" href="perfil.html">
+                <span class="material-symbols-outlined">account_circle</span>
+                <p class="text-[10px] font-medium uppercase">Perfil</p>
+            </a>
+        </nav>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            carregarHistorico();
+        });
+
+        function carregarHistorico() {
+            const historico = ClickGuincho.Storage.obter('historico') || [];
+            const lista = document.getElementById('historicoLista');
+            const vazio = document.getElementById('historicoVazio');
+
+            if (historico.length === 0) {
+                vazio.classList.remove('hidden');
+                return;
+            }
+
+            lista.innerHTML = historico.map(item => `
+                <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold uppercase ${getStatusColor(item.status)}">
+                            ${getStatusText(item.status)}
+                        </span>
+                        <span class="text-xs text-slate-500">${ClickGuincho.Formatacao.data(item.dataHora)}</span>
+                    </div>
+                    <p class="font-bold text-slate-900 dark:text-white">${getTipoServico(item.servico)}</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">${item.localizacao ? 'Local registrado' : 'Sem localização'}</p>
+                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                        <span class="text-lg font-bold text-primary">${ClickGuincho.Formatacao.moeda(item.valor)}</span>
+                        <button class="text-sm text-primary hover:underline">Ver detalhes</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getTipoServico(tipo) {
+            const tipos = {
+                'guincho-simples': 'Guincho Simples',
+                'guincho-plataforma': 'Guincho Plataforma',
+                'moto-guincho': 'Moto Guincho',
+                'guincho-pesado': 'Guincho Pesado'
+            };
+            return tipos[tipo] || tipo;
+        }
+
+        function getStatusText(status) {
+            const textos = {
+                'aguardando': 'Aguardando',
+                'a_caminho': 'A Caminho',
+                'chegou': 'Concluído',
+                'cancelado': 'Cancelado'
+            };
+            return textos[status] || status;
+        }
+
+        function getStatusColor(status) {
+            const cores = {
+                'aguardando': 'text-yellow-600',
+                'a_caminho': 'text-blue-600',
+                'chegou': 'text-green-600',
+                'cancelado': 'text-red-600'
+            };
+            return cores[status] || 'text-slate-600';
+        }
+    </script>
+</body>
+</html>

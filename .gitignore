@@ -1,0 +1,39 @@
+# Dependências
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Ambientes
+.env
+.env.local
+.env.production
+
+# Builds
+dist/
+build/
+.next/
+.vercel/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Temporários
+tmp/
+temp/
+.cache/
+
+# Testes
+coverage/
+.nyc_output/
